@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubeshow
+spec:
+  containers:
+  - name: kubeshow
+    image: goern/kubeshow
+    ports:
+    - containerPort: 8088

@@ -1,0 +1,17 @@
+{
+  "name": "kubeshow",
+  "description": "A sample application for using NodeJS to talk to Kubernetes",
+  "readme": "README.md",
+  "license" : "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/goern/kubeshow"
+  },
+  "dependencies": {
+    "winston": "2.2.*",
+    "express": "4.13.*",
+    "cors": "2.7.*",
+    "node-kubernetes-client": "0.2.*",
+    "nodemon": "*"
+  }
+}
