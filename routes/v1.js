@@ -61,7 +61,13 @@ var getNodeInfo = function(id) {
 app.get('/info/nodes', cors(), function (req, res, next) {
   winston.info(Date.now() + " some client requested to get a list of all nodes");
 
-  getNodeInfo();
+  res.send(getNodeInfo());
+});
 
-  res.send("info delivered");
+app.get('/info/node/:id', cors(), function (req, res, next) {
+  var nodeId = req.params.id
+
+  winston.info(Date.now() + " some client requested to get info about node "+nodeId);
+
+  res.send(getNodeInfo(nodeId));
 });
