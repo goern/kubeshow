@@ -3,7 +3,7 @@ var fs = require('fs'),
   winston = require('winston'),
   cors = require('cors'),
   express = require('express'),
-  kube = require('node-kubernetes-client');
+  Client = require('node-kubernetes-client');
 
 var consts = require('../consts.js');
 
@@ -19,35 +19,49 @@ app.get('/', cors(), function(req, res, next) {
           });
 })
 
-app.get('/info/:q', cors(), function (req, res, next) {
+// get info on kubernetes node id or, if id is not supplied on all nodes
+var getNodeInfo = function(id) {
   var token = '';
-  var query = req.params.q.trim();
-  winston.info(Date.now() + " some client requested info on ", query);
 
+  // lets read the token, it is part of the pod's filesystem,
+  // see http://kubernetes.io/docs/user-guide/accessing-the-cluster/#accessing-the-api-from-a-pod
   fs.readFile('/var/run/secrets/kubernetes.io/serviceaccount/token', 'utf8', function (err,data) {
     if (err) {
-      return winston.error(err);
+      winston.error(err);
+      return {"error": err}
     }
-    winston.info(data);
+
     token = data;
   });
 
-
-  var client = new kube({
-      host:     'kubernetes',
+  // connectiong to the Kube API server is described at
+  // http://kubernetes.io/docs/user-guide/accessing-the-cluster/#accessing-the-api-from-a-pod
+  var client = new Client({
+      host:     'kubernetes:'+process.env.KUBERNETES_SERVICE_PORT,
       protocol: 'https',
       version:  'v1',
       token:    token
   });
 
+  // and lets get a list of all kubernetes nodes
   try {
-    client.pods.get(function (err, pods) {
-      winston.info('pods:', pods);
+    client.nodes.get(function (err, nodesArr) {
+      if (!err) {
+        winston.info('kubernetes nodes: ' + JSON.stringify(nodesArr));
+        return nodesArr[0].items;
+      }
     });
   }
   catch (err) {
-    winston.error("cant get pods... " + err.message);
+    winston.error("cant get nodes... " + err.message);
+    return {"error": err}
   }
+}
 
-  res.send("info on " + query + " delivered");
+app.get('/info/nodes', cors(), function (req, res, next) {
+  winston.info(Date.now() + " some client requested to get a list of all nodes");
+
+  getNodeInfo();
+
+  res.send("info delivered");
 });
